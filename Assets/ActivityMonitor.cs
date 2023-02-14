@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class ActivityMonitor : MonoBehaviour
 {
@@ -17,16 +18,33 @@ public class ActivityMonitor : MonoBehaviour
     private float movementThreshold = 0.1f; // The minimum distance each point need to move to be triggered as movement
     private float movementToDistance = 100f; // In real life: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
 
-    void Start()
+    private float totalMovementData = 0f; // leftDistanceMoved, rightDistanceMoved & headsetDistanceMoved combined into one value
+
+    private bool initialized = false;
+    IEnumerator Initialize()
     {
+        // Wait for 1 second to make sure the controllers are in their initial position
+        yield return new WaitForSeconds(1f);
         // Store the initial positions of the controllers and headset
         previousLeftPosition = leftController.position;
         previousRightPosition = rightController.position;
         previousHeadsetPosition = VRHeadset.position;
+        initialized = true;
     }
-
+    void Start()
+    {
+        // Start the initialization process
+        StartCoroutine(Initialize());
+    }
     void Update()
     {
+        // Check if the initialization process has finished
+        // To prevent tracking points to gain points when the teleport from their initial positions
+        if (!initialized)
+        {
+            return;
+        }
+
         // Check if the left controller has moved
         if (Vector3.Distance(leftController.position, previousLeftPosition) > movementThreshold)
         {
@@ -38,6 +56,8 @@ public class ActivityMonitor : MonoBehaviour
             previousLeftPosition = leftController.position;
             // Output the distanceMoved variable to the console
             Debug.Log("Left controller moved " + leftDistanceMoved + " centimeters this frame.");
+            totalMovementData += leftDistanceMoved;
+
         }
         // Check if the right controller has moved
         if (Vector3.Distance(rightController.position, previousRightPosition) > movementThreshold)
@@ -49,7 +69,8 @@ public class ActivityMonitor : MonoBehaviour
             // Update the previous position of the right controller
             previousRightPosition = rightController.position;
             // Output the distanceMoved variable to the console
-            Debug.Log("Right controller moved " + rightDistanceMoved + " centimeters this frame.");
+            //Debug.Log("Right controller moved " + rightDistanceMoved + " centimeters this frame.");
+            totalMovementData += rightDistanceMoved;
         }
         // Check if the VR headset has moved
         if (Vector3.Distance(VRHeadset.position, previousHeadsetPosition) > movementThreshold)
@@ -61,7 +82,11 @@ public class ActivityMonitor : MonoBehaviour
             // Update the previous position of the right controller
             previousHeadsetPosition = VRHeadset.position;
             // Output the distanceMoved variable to the console
-            Debug.Log("VR headset moved " + headsetDistanceMoved + " centimeters this frame.");
+            //Debug.Log("VR headset moved " + headsetDistanceMoved + " centimeters this frame.");
+            totalMovementData += headsetDistanceMoved;
         }
+
+        //totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved;
+        //Debug.Log(totalMovementData);
     }
 }
