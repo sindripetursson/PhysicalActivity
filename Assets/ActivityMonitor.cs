@@ -31,6 +31,7 @@ public class ActivityMonitor : MonoBehaviour
     private float timeSinceMovement = 0.0f; // Time elapsed since the last squat movment detection
     // Squatting variables
     [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height
+    [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
 
     IEnumerator Initialize()
@@ -57,22 +58,32 @@ public class ActivityMonitor : MonoBehaviour
             return;
         }
 
+        // Get the currentHeight of the player - headset from ground
         float currentHeight = VRHeadset.position.y;
+        // Get how far player's head is from his standing upright position
         float heightDelta = currentHeight - playersHeight;
+
+        Vector3 headForward = VRHeadset.forward;
+        // This checks how much the headset is facing down - The head can be slightliy facing down
+        if(Vector3.Dot(headForward, Vector3.down) < squatHeadRotationThreshold)
+        {
+            //Debug.Log("TEST!1");
+        }
 
         // Check if the user has squat
         // First check for a cooldown between each beneficial movement
-        // Second check - Squats:
-        // Current Height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
-        // heightDelta checkes whether the heaqdset is travelling up (above 0) or down (below 0)
-        // If the user moves down by squat threshold (certain % of the players height) then it is detected as a squat
         // Third check - ...:
         if (timeSinceMovement < movementCoolDown)
         {
             timeSinceMovement += Time.deltaTime;
         }
-        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * squatThreshold)
+        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * squatThreshold && Vector3.Dot(headForward, Vector3.down) < squatHeadRotationThreshold)
         {
+            // Current Height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
+            // heightDelta checkes whether the heaqdset is travelling up (above 0) or down (below 0)
+            // If the user moves down by squat threshold (certain % of the players height) then it is detected as a squat
+            // Checks how much the headset is facing down - The head can be slightliy facing down, but not over the squatHeadRotationThreshold
+
             // Reset the timer of the cool down
             timeSinceMovement = 0.0f;
             // Squat was detected, TODO: Reward points for it
