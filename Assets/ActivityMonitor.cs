@@ -26,11 +26,12 @@ public class ActivityMonitor : MonoBehaviour
 
 
     // Variables for beneficial movements
-    [SerializeField] private float playersHeight = 1.7f;
-    [SerializeField] private float squatCoolDown = 2.0f; // Cool down time needed between 
-    private float timeSinceSquat = 0.0f; // Time elapsed since the last squat movment detection
-    //[SerializeField] private float squatThreshold = 0.3f;
-    private float startHeight;
+    [SerializeField] private float playersHeight = 1.7f; // The height of the VR headset when user is standing up, used for movement detection - TODO: Add a method to calibrate this
+    [SerializeField] private float movementCoolDown = 2.0f; // Cool down time needed between beneficial movements 
+    private float timeSinceMovement = 0.0f; // Time elapsed since the last squat movment detection
+    // Squatting variables
+    [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height
+
 
     IEnumerator Initialize()
     {
@@ -46,9 +47,6 @@ public class ActivityMonitor : MonoBehaviour
     {
         // Start the initialization process
         StartCoroutine(Initialize());
-
-        // For beneficial movements
-        startHeight = playersHeight;
     }
     void Update()
     {
@@ -60,22 +58,23 @@ public class ActivityMonitor : MonoBehaviour
         }
 
         float currentHeight = VRHeadset.position.y;
-        float heightDelta = currentHeight - startHeight;
+        float heightDelta = currentHeight - playersHeight;
 
         // Check if the user has squat
-        // First check is used for a cooldown between each squat
-        // Second check:
+        // First check for a cooldown between each beneficial movement
+        // Second check - Squats:
         // Current Height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
         // heightDelta checkes whether the heaqdset is travelling up (above 0) or down (below 0)
-        // If the user moves down by 30% of the players height then it is detected as a squat
-        if (timeSinceSquat < squatCoolDown)
+        // If the user moves down by squat threshold (certain % of the players height) then it is detected as a squat
+        // Third check - ...:
+        if (timeSinceMovement < movementCoolDown)
         {
-            timeSinceSquat += Time.deltaTime;
+            timeSinceMovement += Time.deltaTime;
         }
-        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * 0.3)
+        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * squatThreshold)
         {
-            // Reset the timer for the cool down
-            timeSinceSquat = 0.0f;
+            // Reset the timer of the cool down
+            timeSinceMovement = 0.0f;
             // Squat was detected, TODO: Reward points for it
             Debug.Log("Squat Detected!");
         }
