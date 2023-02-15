@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections;
 
 public class ActivityMonitor : MonoBehaviour
-{
+{ 
+    // Variables for general movements
     public Transform leftController; // left VR controller
     public Transform rightController; // right VR controller
     public Transform VRHeadset; // VR headset
@@ -22,6 +23,15 @@ public class ActivityMonitor : MonoBehaviour
     private float totalMovementData = 0f; // leftDistanceMoved, rightDistanceMoved & headsetDistanceMoved combined into one value
 
     private bool initialized = false;
+
+
+    // Variables for beneficial movements
+    [SerializeField] private float playersHeight = 1.7f;
+    [SerializeField] private float squatCoolDown = 2.0f; // Cool down time needed between 
+    private float timeSinceSquat = 0.0f; // Time elapsed since the last squat movment detection
+    //[SerializeField] private float squatThreshold = 0.3f;
+    private float startHeight;
+
     IEnumerator Initialize()
     {
         // Wait for 1 second to make sure the controllers are in their initial position
@@ -36,6 +46,9 @@ public class ActivityMonitor : MonoBehaviour
     {
         // Start the initialization process
         StartCoroutine(Initialize());
+
+        // For beneficial movements
+        startHeight = playersHeight;
     }
     void Update()
     {
@@ -44,6 +57,27 @@ public class ActivityMonitor : MonoBehaviour
         if (!initialized)
         {
             return;
+        }
+
+        float currentHeight = VRHeadset.position.y;
+        float heightDelta = currentHeight - startHeight;
+
+        // Check if the user has squat
+        // First check is used for a cooldown between each squat
+        // Second check:
+        // Current Height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
+        // heightDelta checkes whether the heaqdset is travelling up (above 0) or down (below 0)
+        // If the user moves down by 30% of the players height then it is detected as a squat
+        if (timeSinceSquat < squatCoolDown)
+        {
+            timeSinceSquat += Time.deltaTime;
+        }
+        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * 0.3)
+        {
+            // Reset the timer for the cool down
+            timeSinceSquat = 0.0f;
+            // Squat was detected, TODO: Reward points for it
+            Debug.Log("Squat Detected!");
         }
 
         if(Vector3.Distance(leftController.position, previousLeftPosition) > teleportThreshold)
@@ -61,7 +95,7 @@ public class ActivityMonitor : MonoBehaviour
 
         // Check if the left controller has moved
         // if the left controller moved furthar than movementThreshold than it counts as a movement
-        // if the left controller moved further than teleportThreshold than the movment was probably teleported controller
+        // or if the left controller moved further than teleportThreshold than the movment was probably teleported controller
         if (Vector3.Distance(leftController.position, previousLeftPosition) > movementThreshold || Vector3.Distance(leftController.position, previousLeftPosition) < teleportThreshold)
         {
             // Calculate the distance the left controller has moved
@@ -77,7 +111,7 @@ public class ActivityMonitor : MonoBehaviour
         }
         // Check if the right controller has moved
         // if the right controller moved furthar than movementThreshold than it counts as a movement
-        // if the right controller moved further than teleportThreshold than the movment was probably teleported controller
+        // or if the right controller moved further than teleportThreshold than the movment was probably teleported controller
         if (Vector3.Distance(rightController.position, previousRightPosition) > movementThreshold || Vector3.Distance(rightController.position, previousRightPosition) < teleportThreshold)
         {
             // Calculate the distance the right controller has moved
@@ -92,7 +126,7 @@ public class ActivityMonitor : MonoBehaviour
         }
         // Check if the VR headset has moved
         // if the VR headset moved furthar than movementThreshold than it count as a movement
-        // if the VR headset moved further than teleportThreshold than the movment was probably teleported controller
+        // or if the VR headset moved further than teleportThreshold than the movment was probably teleported controller
         if (Vector3.Distance(VRHeadset.position, previousHeadsetPosition) > movementThreshold || Vector3.Distance(VRHeadset.position, previousHeadsetPosition) < teleportThreshold)
         {
             // Calculate the distance the VR headset has moved

@@ -957,6 +957,8 @@ MonoBehaviour:
   leftController: {fileID: 2096205540}
   rightController: {fileID: 375936271}
   VRHeadset: {fileID: 845719445}
+  playersHeight: 1.7
+  squatCoolDown: 2
 --- !u!4 &1165420333
 Transform:
   m_ObjectHideFlags: 0
