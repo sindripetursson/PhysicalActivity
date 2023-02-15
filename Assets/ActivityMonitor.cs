@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 public class ActivityMonitor : MonoBehaviour
-{ 
+{
     // Variables for general movements
     public Transform leftController; // left VR controller
     public Transform rightController; // right VR controller
@@ -12,27 +12,25 @@ public class ActivityMonitor : MonoBehaviour
     private Vector3 previousRightPosition; // previous position of right VR controller
     private Vector3 previousHeadsetPosition; // previous position of VR headset
 
-    private float leftDistanceMoved = 0f; // Total distance right controller has moved
-    private float rightDistanceMoved = 0f; // Total distance left controller has moved
-    private float headsetDistanceMoved = 0f; // Total distance VR headset has moved
+    public float leftDistanceMoved = 0f; // Total distance right controller has moved
+    public float rightDistanceMoved = 0f; // Total distance left controller has moved
+    public float headsetDistanceMoved = 0f; // Total distance VR headset has moved
 
     private float movementThreshold = 0.1f; // The minimum distance each point need to move to be triggered as movement
     private float teleportThreshold = 1f; // The maximum distance each point can move to be triggered as movement
     private float movementToDistance = 100f; // In real life: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
 
-    private float totalMovementData = 0f; // leftDistanceMoved, rightDistanceMoved & headsetDistanceMoved combined into one value
+    public float totalMovementData = 0f; // leftDistanceMoved, rightDistanceMoved & headsetDistanceMoved combined into one value
 
     private bool initialized = false;
-
 
     // Variables for beneficial movements
     [SerializeField] private float playersHeight = 1.7f; // The height of the VR headset when user is standing up, used for movement detection - TODO: Add a method to calibrate this
     [SerializeField] private float movementCoolDown = 2.0f; // Cool down time needed between beneficial movements 
-    private float timeSinceMovement = 0.0f; // Time elapsed since the last squat movment detection
+    private float timeSinceMovement = 0f; // Time elapsed since the last squat movment detection
     // Squatting variables
     [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
-
 
     IEnumerator Initialize()
     {
@@ -62,13 +60,9 @@ public class ActivityMonitor : MonoBehaviour
         float currentHeight = VRHeadset.position.y;
         // Get how far player's head is from his standing upright position
         float heightDelta = currentHeight - playersHeight;
-
+        
+        // Get the current orientation of the VR headset
         Vector3 headForward = VRHeadset.forward;
-        // This checks how much the headset is facing down - The head can be slightliy facing down
-        if(Vector3.Dot(headForward, Vector3.down) < squatHeadRotationThreshold)
-        {
-            //Debug.Log("TEST!1");
-        }
 
         // Check if the user has squat
         // First check for a cooldown between each beneficial movement
@@ -117,7 +111,6 @@ public class ActivityMonitor : MonoBehaviour
             // Output the distanceMoved variable to the console
             //Debug.Log("Left controller moved " + leftDistanceMoved + " centimeters this frame.");
             totalMovementData += leftDistanceMoved;
-
         }
         // Check if the right controller has moved
         // if the right controller moved furthar than movementThreshold than it counts as a movement
