@@ -16,6 +16,7 @@ public class ActivityMonitor : MonoBehaviour
     private float headsetDistanceMoved = 0f; // Total distance VR headset has moved
 
     private float movementThreshold = 0.1f; // The minimum distance each point need to move to be triggered as movement
+    private float teleportThreshold = 1f; // The maximum distance each point can move to be triggered as movement
     private float movementToDistance = 100f; // In real life: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
 
     private float totalMovementData = 0f; // leftDistanceMoved, rightDistanceMoved & headsetDistanceMoved combined into one value
@@ -45,8 +46,23 @@ public class ActivityMonitor : MonoBehaviour
             return;
         }
 
+        if(Vector3.Distance(leftController.position, previousLeftPosition) > teleportThreshold)
+        {
+            Debug.Log("Teleport triggered on the left controller");
+        }
+        if (Vector3.Distance(rightController.position, previousRightPosition) > teleportThreshold)
+        {
+            Debug.Log("Teleport triggered on the right controller");
+        }
+        if (Vector3.Distance(VRHeadset.position, previousHeadsetPosition) > teleportThreshold)
+        {
+            Debug.Log("Teleport triggered on the VR headset");
+        }
+
         // Check if the left controller has moved
-        if (Vector3.Distance(leftController.position, previousLeftPosition) > movementThreshold)
+        // if the left controller moved furthar than movementThreshold than it counts as a movement
+        // if the left controller moved further than teleportThreshold than the movment was probably teleported controller
+        if (Vector3.Distance(leftController.position, previousLeftPosition) > movementThreshold || Vector3.Distance(leftController.position, previousLeftPosition) < teleportThreshold)
         {
             // Calculate the distance the left controller has moved
             float leftMovement = Vector3.Distance(leftController.position, previousLeftPosition);
@@ -55,12 +71,14 @@ public class ActivityMonitor : MonoBehaviour
             // Update the previous position of the left controller
             previousLeftPosition = leftController.position;
             // Output the distanceMoved variable to the console
-            Debug.Log("Left controller moved " + leftDistanceMoved + " centimeters this frame.");
+            //Debug.Log("Left controller moved " + leftDistanceMoved + " centimeters this frame.");
             totalMovementData += leftDistanceMoved;
 
         }
         // Check if the right controller has moved
-        if (Vector3.Distance(rightController.position, previousRightPosition) > movementThreshold)
+        // if the right controller moved furthar than movementThreshold than it counts as a movement
+        // if the right controller moved further than teleportThreshold than the movment was probably teleported controller
+        if (Vector3.Distance(rightController.position, previousRightPosition) > movementThreshold || Vector3.Distance(rightController.position, previousRightPosition) < teleportThreshold)
         {
             // Calculate the distance the right controller has moved
             float rightMovement = Vector3.Distance(rightController.position, previousRightPosition);
@@ -73,7 +91,9 @@ public class ActivityMonitor : MonoBehaviour
             totalMovementData += rightDistanceMoved;
         }
         // Check if the VR headset has moved
-        if (Vector3.Distance(VRHeadset.position, previousHeadsetPosition) > movementThreshold)
+        // if the VR headset moved furthar than movementThreshold than it count as a movement
+        // if the VR headset moved further than teleportThreshold than the movment was probably teleported controller
+        if (Vector3.Distance(VRHeadset.position, previousHeadsetPosition) > movementThreshold || Vector3.Distance(VRHeadset.position, previousHeadsetPosition) < teleportThreshold)
         {
             // Calculate the distance the VR headset has moved
             float headsetMovement = Vector3.Distance(VRHeadset.position, previousHeadsetPosition);
@@ -86,7 +106,7 @@ public class ActivityMonitor : MonoBehaviour
             totalMovementData += headsetDistanceMoved;
         }
 
-        //totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved;
+        totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved;
         //Debug.Log(totalMovementData);
     }
 }
