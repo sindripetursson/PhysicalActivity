@@ -21,13 +21,14 @@ public class UIManager : MonoBehaviour
     private float currentFillAmount; // Track of current fill amount
     private float targetFillAmount; // Target fill amount
     [SerializeField] private int pointsNeededForFullActivityBar = 10000; // Points needed to fill up the physical activity bar
+    private float rememberPhysicalActivityPoints = 0; // Used when the physical activity bar is resetted
 
     void Start()
     {
         GameObject activityMonitorGameObject = GameObject.Find("ActivityMonitor"); // Find the Activity Monitor in the scene
         activityMonitor = activityMonitorGameObject.GetComponent<ActivityMonitor>(); // Access the Activity Monitor
 
-        // Initialize the current and target fill amounts to 0
+        // Initialize variables for the physical activity bar to 0
         currentFillAmount = 0f;
         targetFillAmount = 0f;
     }
@@ -48,21 +49,45 @@ public class UIManager : MonoBehaviour
 
     void UpdatePhysicalActivityBar()
     {
-        // Calculate the target fill amount based on the totalMovementData 
-        targetFillAmount = activityMonitor.totalMovementData / pointsNeededForFullActivityBar;
-        // If the target fill amount is significantly different from the current fill amount, interpolate towards the target fill amount using Lerp
+        // Calculate the targetFillAmount based on totalMovementData, minus the PhysicalActivity points when it was last resetted (So the bar gets a reset to 0 while the totalMovementData holds the total value)
+        // Devided by pointsNeededForFullActivityBar, giving number between 0 and 1
+        targetFillAmount = (activityMonitor.totalMovementData - rememberPhysicalActivityPoints) / pointsNeededForFullActivityBar;
+        // If the targetFillAmount is significantly different from the currentFillAmount, interpolate towards the target fill amount using Lerp - Making it more smooth
         if (Mathf.Abs(targetFillAmount - currentFillAmount) > 0.001f)
         {
-            // Interpolate the current fill amount towards the target fill amount over time
-            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, Time.deltaTime * 5f); // The last parameter is the speed of the interpolation
+            // Interpolate the current fill amount towards the target fill amount over time - The last parameter is the speed of the interpolation
+            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, Time.deltaTime * 5f);
         }
         else
         {
-            // If the target fill amount is close to the current fill amount, set the current fill amount to the target fill amount directly
+            // If the targetFillAmount is close to the currentFillAmount, set the targetFillAmount to the targetFillAmount directly
             currentFillAmount = targetFillAmount;
         }
-        // Update the physical activity bar with the currentFillAmount 
+        // Update the PhysicalActivityBar with the currentFillAmount
         PhysicalActivityBar.fillAmount = currentFillAmount;
+
+        // A full physival activity bar is = 1
+        if (PhysicalActivityBar.fillAmount >= 1)
+        {
+            // Reset the physical activity bar, without resetting the totalMovementData
+            StartCoroutine(ResetPhysicalActivityBar());
+            Debug.Log("Filled");
+        }
+    }
+
+    private IEnumerator ResetPhysicalActivityBar()
+    {
+        // TODO: Add a reward sound / effect
+        // TODO: Give the user a reward in game
+
+        yield return new WaitForSeconds(2); // Time until the bar gets resetted - 
+        // Store the value of totalMovementData when the bar was resetted - Used when the physical activity bar is calculated again after each reset
+        rememberPhysicalActivityPoints = activityMonitor.totalMovementData;
+        // Reset all physical activity bar variables
+        currentFillAmount = 0f;
+        targetFillAmount = 0f;
+        PhysicalActivityBar.fillAmount = 0;
+        Debug.Log("Physical activity bar resetted");
     }
 
 }
