@@ -15,6 +15,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI rightActivityText;
     public TextMeshProUGUI leftActivityText;
     public TextMeshProUGUI squatsActivityText;
+    public TextMeshProUGUI playersHeightText;
     public TextMeshProUGUI debugInfoJumpText;
     public TextMeshProUGUI debugInfoHandsText;
 
@@ -56,6 +57,7 @@ public class UIManager : MonoBehaviour
         // Display the number of squats and the number of squats multiplied with the points given for each
         squatsActivityText.text = "Squats: " + activityMonitor.numberOfSquats + " - Reward: " + activityMonitor.numberOfSquats*activityMonitor.numberOfPointsForSquats;
         // Extra stuff used for debugging
+        playersHeightText.text = "Height: " + activityMonitor.playersHeight.ToString("F3");
         debugInfoJumpText.text = "heightdelta: " + activityMonitor.heightDelta.ToString("F3") + " - isJumping: " + activityMonitor.isJumping;
         debugInfoHandsText.text = "handsHeightDifference: " + activityMonitor.handsHeightDifference;
 

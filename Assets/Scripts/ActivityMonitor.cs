@@ -24,7 +24,10 @@ public class ActivityMonitor : MonoBehaviour
     // Movement Thresholds
     private float movementThreshold = 0.1f; // The minimum distance each tracking point needs to be move to be triggered as movement
     private float teleportThreshold = 1f; // The maximum distance each tracking point can move to be triggered as movement - To avoid gaining points when tracking points teleports after disconnection
-    
+
+    // Measurements
+    public float heightDelta; // How far player's head is from his standing upright position
+
     // Convertion
     private float movementToDistance = 100f; // Convert tracking point data to real life distance: In real life: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
 
@@ -32,7 +35,7 @@ public class ActivityMonitor : MonoBehaviour
     public float totalMovementData = 0f; // All physical activity data combined into one value - From each tracking point and from all beneficial movements
 
     // Beneficial movements
-    [SerializeField] private float playersHeight = 1.7f; // Height of the VR headset when user is standing up, used for movement detection - TODO: Add a method to calibrate this
+    [SerializeField] public float playersHeight = 1.7f; // Height of the VR headset when user is standing up, used for movement detection - TODO: Add a method to calibrate this
     private bool movementReset = false; // Check if user got up to standing up position between each beneficial movelemt
     [SerializeField] private float movementCoolDown = 6.0f; // Cool down time needed between beneficial movement
     private float timeSinceMovement = 0f; // Time elapsed since the last beneficial movment detection - should be set to 0
@@ -44,12 +47,11 @@ public class ActivityMonitor : MonoBehaviour
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
     // Jumping jack
+    [SerializeField] private float heightToDetectJump = 0.1f;
     public bool isJumping = false;
     private float jumpStartTime = 0f;
     //private float minHandsDiffernece = 0.5f;
     private float maxHandsDifference = 0.2f; 
-
-    public float heightDelta;
     public float handsHeightDifference;
 
     IEnumerator Initialize()
@@ -101,6 +103,12 @@ public class ActivityMonitor : MonoBehaviour
             Debug.Log("Teleport: VR headset");
         }
 
+        if (Input.GetButtonDown("A_Button"))
+        {
+            Debug.Log("Player's height calibrated to: " + playersHeight);
+            playersHeight = currentHeight;
+        }
+
         // Checks if player's head is close to upstanding position
         // Makes sure that player has to go to initial standing position between each beneficial movement
         // Only goes into this if movementReset is false
@@ -110,7 +118,7 @@ public class ActivityMonitor : MonoBehaviour
             movementReset = true; // Player can now perform a new beneficial movement 
         }
 
-        if(heightDelta > 0.1)
+        if(heightDelta > heightToDetectJump)
         {
             isJumping = true;
             jumpStartTime = Time.time;
