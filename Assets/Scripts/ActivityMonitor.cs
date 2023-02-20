@@ -33,7 +33,8 @@ public class ActivityMonitor : MonoBehaviour
 
     // Beneficial movements
     [SerializeField] private float playersHeight = 1.7f; // Height of the VR headset when user is standing up, used for movement detection - TODO: Add a method to calibrate this
-    [SerializeField] private float movementCoolDown = 2.0f; // Cool down time needed between beneficial movement
+    private bool movementReset = false; // Check if user got up to standing up position between each beneficial movelemt
+    [SerializeField] private float movementCoolDown = 6.0f; // Cool down time needed between beneficial movement
     private float timeSinceMovement = 0f; // Time elapsed since the last beneficial movment detection - should be set to 0
 
     // Squat movment
@@ -88,9 +89,19 @@ public class ActivityMonitor : MonoBehaviour
             Debug.Log("Teleport: VR headset");
         }
 
+        // Checks if player's head is close to upstanding position
+        // Makes sure that player has to go to initial standing position between each beneficial movement
+        // Only goes into this if movementReset is false
+        if (heightDelta > -0.1 && heightDelta < 0.1 && !movementReset)
+        {
+            Debug.Log("Movement Reset!");
+            movementReset = true; // Player can now perform a new beneficial movement 
+        }
+
         // Check if the user has performed a beneficial movement
         // First check for a cooldown between each beneficial movement
-        if (timeSinceMovement < movementCoolDown)
+        // Skip this check if player has got into their initial standing position (Then they dont have to wait for the cooldown timer)
+        if (!movementReset && timeSinceMovement < movementCoolDown)
         {
             timeSinceMovement += Time.deltaTime;
         }
@@ -98,10 +109,11 @@ public class ActivityMonitor : MonoBehaviour
         {
             // SQUAT
             // Current Height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
-            // heightDelta checkes whether the heaqdset is travelling up (above 0) or down (below 0)
+            // heightDelta checkes distance from players initial standing position (above 0) or (below 0)
             // If the user moves down by squat threshold (certain % of the players height) then it is detected as a squat
             // Checks how much the headset is facing down - The head can be slightliy facing down, but not over the squatHeadRotationThreshold
 
+            movementReset = false; // is false until player's head is close to standin up position
             // Reset the timer of the beneficial movement cool down
             timeSinceMovement = 0.0f;
             numberOfSquats += 1;

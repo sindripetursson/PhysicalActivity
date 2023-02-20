@@ -1367,7 +1367,7 @@ MonoBehaviour:
   headsetDistanceMoved: 0
   totalMovementData: 0
   playersHeight: 1.7
-  movementCoolDown: 2
+  movementCoolDown: 6
   numberOfSquats: 0
   numberOfPointsForSquats: 1000
   squatThreshold: 0.3

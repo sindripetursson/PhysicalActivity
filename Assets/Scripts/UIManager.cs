@@ -84,6 +84,7 @@ public class UIManager : MonoBehaviour
             if (PhysicalActivityBar.fillAmount >= 1)
             {
                 Debug.Log("Filled");
+                // TODO: Give the user a reward in game
                 int randomRewardText = Random.Range(0, 8); // 0-7, One random complement word
                 audioSorce.Play(); // Play a reward sound
                 fullBarText.text = complementWords[randomRewardText]; // Display one of the complement words
@@ -96,9 +97,6 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator ResetPhysicalActivityBar()
     {
-        // TODO: Add a reward sound / effect
-        // TODO: Give the user a reward in game
-
         yield return new WaitForSeconds(2); // Time until the bar gets resetted - Seconds will depend on how long the reward will take
         // Store the value of totalMovementData when the bar was resetted - Used when the physical activity bar is calculated again after each reset
         fullBarText.text = "";
