@@ -43,6 +43,15 @@ public class ActivityMonitor : MonoBehaviour
     [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height - Larger number = deeper squat
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
+    // Jumping jack
+    public bool isJumping = false;
+    private float jumpStartTime = 0f;
+    //private float minHandsDiffernece = 0.5f;
+    private float maxHandsDifference = 0.2f; 
+
+    public float heightDelta;
+    public float handsHeightDifference;
+
     IEnumerator Initialize()
     {
         // Wait for 1 second to make sure the controllers are in their initial position
@@ -70,8 +79,11 @@ public class ActivityMonitor : MonoBehaviour
         // Get currentHeight of the player - headset from ground
         float currentHeight = VRHeadset.position.y;
         // Get how far player's head is from his standing upright position
-        float heightDelta = currentHeight - playersHeight;
-        
+        heightDelta = currentHeight - playersHeight;
+        //Debug.Log(heightDelta);
+        // Calculate the height difference between the hands
+        handsHeightDifference = Mathf.Abs(leftController.position.y - rightController.position.y);
+        //Debug.Log(handsHeightDifference);
         // Get current orientation of the VR headset
         Vector3 headForward = VRHeadset.forward;
 
@@ -98,6 +110,16 @@ public class ActivityMonitor : MonoBehaviour
             movementReset = true; // Player can now perform a new beneficial movement 
         }
 
+        if(heightDelta > 0.1)
+        {
+            isJumping = true;
+            jumpStartTime = Time.time;
+        }
+        else
+        {
+            isJumping = false;
+        }
+
         // Check if the user has performed a beneficial movement
         // First check for a cooldown between each beneficial movement
         // Skip this check if player has got into their initial standing position (Then they dont have to wait for the cooldown timer)
@@ -118,6 +140,17 @@ public class ActivityMonitor : MonoBehaviour
             timeSinceMovement = 0.0f;
             numberOfSquats += 1;
             Debug.Log("Squat Detected!");
+        }
+        else if(isJumping)
+        {
+            // JUMPINGJACK
+            if(handsHeightDifference < maxHandsDifference)
+            {
+                //isJumping = false;
+                //float jumpTime = Time.time - jumpStartTime;
+                //Debug.Log(Time.time - jumpStartTime);
+                //Debug.Log("Jumping jack completed in " + jumpTime + " seconds");
+            }
         }
 
         // Left controller

@@ -15,6 +15,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI rightActivityText;
     public TextMeshProUGUI leftActivityText;
     public TextMeshProUGUI squatsActivityText;
+    public TextMeshProUGUI debugInfoJumpText;
+    public TextMeshProUGUI debugInfoHandsText;
 
     // Physical activity bar
     public Image PhysicalActivityBar; // Access the bar
@@ -48,11 +50,14 @@ public class UIManager : MonoBehaviour
     {
         // Get values each tracking point from the ActivityMonitor and display them in the UI
         physicalActivityText.text = "Physical activity points: " + (int)activityMonitor.totalMovementData;
-        headsetActivityText.text = "Headset: " + (int)activityMonitor.headsetDistanceMoved;
-        rightActivityText.text = "Right hand: " + (int)activityMonitor.rightDistanceMoved;
-        leftActivityText.text = "Left hand: " + (int)activityMonitor.leftDistanceMoved;
+        headsetActivityText.text = "Headset - Points " + (int)activityMonitor.headsetDistanceMoved + " - Position: " + activityMonitor.VRHeadset.position;
+        rightActivityText.text = "Right hand - Points: " + (int)activityMonitor.rightDistanceMoved + " - Position: " + activityMonitor.rightController.position;
+        leftActivityText.text = "Left hand - Points: " + (int)activityMonitor.leftDistanceMoved + " - Position: " + activityMonitor.leftController.position;
         // Display the number of squats and the number of squats multiplied with the points given for each
         squatsActivityText.text = "Squats: " + activityMonitor.numberOfSquats + " - Reward: " + activityMonitor.numberOfSquats*activityMonitor.numberOfPointsForSquats;
+        // Extra stuff used for debugging
+        debugInfoJumpText.text = "heightdelta: " + activityMonitor.heightDelta.ToString("F3") + " - isJumping: " + activityMonitor.isJumping;
+        debugInfoHandsText.text = "handsHeightDifference: " + activityMonitor.handsHeightDifference;
 
         // Update the physical activity bar
         UpdatePhysicalActivityBar();
