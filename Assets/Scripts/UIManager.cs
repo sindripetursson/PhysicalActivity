@@ -24,6 +24,13 @@ public class UIManager : MonoBehaviour
     private float rememberPhysicalActivityPoints = 0; // Used when the physical activity bar is resetted
     private bool isGettingAReset = false; // Used while the physical activity bar is getting a reset
 
+    // Rewards
+    public AudioSource audioSorce; // Sorce of the audio
+    public AudioClip sound; // The sound played on a full activity bar
+    public TextMeshProUGUI fullBarText; // Text displayed on activity bar when full
+    private string[] complementWords = { "Nice!", "Great!", "Awesome!", "Excellent!", "Amazing!", "Active!", "Strong!", "Well done!" }; // 8 complements
+
+
     void Start()
     {
         GameObject activityMonitorGameObject = GameObject.Find("ActivityMonitor"); // Find the Activity Monitor in the scene
@@ -32,6 +39,9 @@ public class UIManager : MonoBehaviour
         // Initialize variables for the physical activity bar to 0
         currentFillAmount = 0f;
         targetFillAmount = 0f;
+
+        // Set AudioClip for audio source
+        audioSorce.clip = sound;
     }
 
     void Update()
@@ -74,7 +84,10 @@ public class UIManager : MonoBehaviour
             if (PhysicalActivityBar.fillAmount >= 1)
             {
                 Debug.Log("Filled");
-                isGettingAReset = true;
+                int randomRewardText = Random.Range(0, 8); // 0-7, One random complement word
+                audioSorce.Play(); // Play a reward sound
+                fullBarText.text = complementWords[randomRewardText]; // Display one of the complement words
+                isGettingAReset = true; // Start to reset the bar
                 // Reset the physical activity bar, without resetting the totalMovementData
                 StartCoroutine(ResetPhysicalActivityBar());
             }
@@ -88,6 +101,7 @@ public class UIManager : MonoBehaviour
 
         yield return new WaitForSeconds(2); // Time until the bar gets resetted - Seconds will depend on how long the reward will take
         // Store the value of totalMovementData when the bar was resetted - Used when the physical activity bar is calculated again after each reset
+        fullBarText.text = "";
         rememberPhysicalActivityPoints = activityMonitor.totalMovementData;
         float elapsedTime = 0f; // Tracks the time for the reset lerp
         float startFillAmount = 1f; // Goes from full bar
