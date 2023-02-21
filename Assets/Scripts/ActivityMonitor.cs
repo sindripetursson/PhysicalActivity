@@ -46,13 +46,20 @@ public class ActivityMonitor : MonoBehaviour
     [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height - Larger number = deeper squat
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
+    // Jumping
+    public bool isJumping = false; // Detect when player is jumping
+    private float jumpStartTime = 0f; // How long was the player jumping
+    private float timeSinceJump = 0f; // How long is it since the player finished a jump
+
     // Jumping jack
-    [SerializeField] private float heightToDetectJump = 0.1f;
-    public bool isJumping = false;
-    private float jumpStartTime = 0f;
-    //private float minHandsDiffernece = 0.5f;
-    private float maxHandsDifference = 0.2f; 
-    public float handsHeightDifference;
+    [SerializeField] private float heightToDetectJump = 0.1f; // Threshold to detect jump - Used with heightDelta = 0 is standing upright - 0.1 is little above that
+    private float maxHandsDifference = 0.2f; // Max allowed y-axis on player hands while performing jumping jacks
+    public float handsHeightDifference; // Check the difference on left and right hand height
+    private bool jumpingJackInitial = false; // Player is standing upright with hands down 
+    private bool jumpingJackSecondPhase = false; // player is standing upright with hands up
+    public int numberOfJumpingJacks = 0; // Number of successful jumping jacks by the user
+    public int numberOfJumpingJacks2 = 0; // Number of successful jumping jacks by the user
+    public int numberOfPointsForJumpingJack = 300; // Number of points given for each successful jumping jack
 
     IEnumerator Initialize()
     {
@@ -83,7 +90,7 @@ public class ActivityMonitor : MonoBehaviour
         // Get how far player's head is from his standing upright position
         heightDelta = currentHeight - playersHeight;
         //Debug.Log(heightDelta);
-        // Calculate the height difference between the hands
+        // Calculate the height difference between the hands of the player
         handsHeightDifference = Mathf.Abs(leftController.position.y - rightController.position.y);
         //Debug.Log(handsHeightDifference);
         // Get current orientation of the VR headset
@@ -103,6 +110,7 @@ public class ActivityMonitor : MonoBehaviour
             Debug.Log("Teleport: VR headset");
         }
 
+        // Press the A button on right VR controller to calibrate the players height
         if (Input.GetButtonDown("A_Button"))
         {
             Debug.Log("Player's height calibrated to: " + playersHeight);
@@ -118,15 +126,25 @@ public class ActivityMonitor : MonoBehaviour
             movementReset = true; // Player can now perform a new beneficial movement 
         }
 
+        // Check if the player is jumping
         if(heightDelta > heightToDetectJump)
         {
             isJumping = true;
+            // Timer on how long the jump was
             jumpStartTime = Time.time;
         }
         else
         {
+            if (isJumping)
+            {
+                Debug.Log("No Longer jumping");
+                timeSinceJump = Time.time;
+            }
+            // Player is no longer jumping
             isJumping = false;
         }
+
+        //Debug.Log((leftController.position.y + rightController.position.y) / 2);
 
         // Check if the user has performed a beneficial movement
         // First check for a cooldown between each beneficial movement
@@ -149,15 +167,39 @@ public class ActivityMonitor : MonoBehaviour
             numberOfSquats += 1;
             Debug.Log("Squat Detected!");
         }
-        else if(isJumping)
+        else if(handsHeightDifference < maxHandsDifference) // First check if the players hands are within similar height while performing jumping jack
         {
+            // Calculates the average height of both controllers - To detect if they are below or above waist
+            float avgControllerHeight = (leftController.position.y + rightController.position.y) / 2;
             // JUMPINGJACK
-            if(handsHeightDifference < maxHandsDifference)
+            // Checks if player is not jumping and the average height of both controllers are under 1 (below waist)
+            if (!isJumping && avgControllerHeight < 1)
             {
-                //isJumping = false;
-                //float jumpTime = Time.time - jumpStartTime;
-                //Debug.Log(Time.time - jumpStartTime);
-                //Debug.Log("Jumping jack completed in " + jumpTime + " seconds");
+                // Then the player is in the initial jumping jack position
+                jumpingJackInitial = true;
+                // Check if player is coming from the second JJ phase (hands above head) - And make sure it is less than 1 second since last jump
+                if(jumpingJackSecondPhase && (Time.time - timeSinceJump) < 0.5)
+                {
+                    // Second phase of JJ is over
+                    jumpingJackSecondPhase = false;
+                    // Give one point for JJ second phase
+                    Debug.Log("Jumping jack2 detected!");
+                    numberOfJumpingJacks2 += 1;
+                }
+            }
+            // If the player is jumping and controllers are above 1.5 (above head)
+            if (isJumping && avgControllerHeight > 1.5)
+            { 
+                // Then the player is getting into the second phase of JJ - Player is no longer in the initial position
+                jumpingJackSecondPhase = true;
+                // Check if player is coming from JJ initial position
+                if (jumpingJackInitial) {
+                    // It is no longer in JJ inital position
+                    jumpingJackInitial = false;
+                    // Give one point for JJ second phase
+                    Debug.Log("Jumping jack detected!");
+                    numberOfJumpingJacks += 1;
+                }
             }
         }
 
@@ -192,7 +234,7 @@ public class ActivityMonitor : MonoBehaviour
             //Debug.Log("VR headset moved " + headsetDistanceMoved + " centimeters this frame.");
         }
         // Combile all physical activity data into one value - From each tracking point and from all beneficial movements
-        totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved + numberOfSquats*numberOfPointsForSquats;
+        totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved + numberOfSquats * numberOfPointsForSquats + (numberOfJumpingJacks + numberOfJumpingJacks2) * numberOfPointsForJumpingJack;
         //Debug.Log(totalMovementData);
     }
 }
