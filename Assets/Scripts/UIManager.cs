@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI leftActivityText;
     public TextMeshProUGUI squatsActivityText;
     public TextMeshProUGUI jumpingJacksActivityText;
+    public TextMeshProUGUI sideJacksActivityText;
     public TextMeshProUGUI playersHeightText;
     public TextMeshProUGUI debugInfoJumpText;
     public TextMeshProUGUI debugInfoHandsText;
@@ -59,6 +60,8 @@ public class UIManager : MonoBehaviour
         squatsActivityText.text = "Squats: " + activityMonitor.numberOfSquats + " - Reward: " + activityMonitor.numberOfSquats*activityMonitor.numberOfPointsForSquats;
         // Display the number of jumping jacks
         jumpingJacksActivityText.text = "Jumping jacks: " + activityMonitor.numberOfJumpingJacks + " - Jumping jacks2: " + activityMonitor.numberOfJumpingJacks2 + " - Reward: " + ((activityMonitor.numberOfJumpingJacks + activityMonitor.numberOfJumpingJacks2) * activityMonitor.numberOfPointsForJumpingJack);
+        // Display the number of side jacks
+        sideJacksActivityText.text = "Side jacks L: " + activityMonitor.numberOfSideJacksL + " - Side jacks R: " + activityMonitor.numberOfSideJacksR + " - Reward: " + ((activityMonitor.numberOfSideJacksL + activityMonitor.numberOfSideJacksR) * activityMonitor.numberOfPointsForSideJack);
         // Extra stuff used for debugging
         playersHeightText.text = "Height: " + activityMonitor.playersHeight.ToString("F3");
         debugInfoJumpText.text = "heightdelta: " + activityMonitor.heightDelta.ToString("F3") + " - isJumping: " + activityMonitor.isJumping;
