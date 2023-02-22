@@ -47,12 +47,11 @@ public class ActivityMonitor : MonoBehaviour
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
     // Side jack
-    public float rotationThreshold = 0.3f;
-    public float handHeightThreshold = 0.2f;
+    public float handHeightThreshold = 0.6f; // The amount the player has to raise the hand to detect side jack
     public int numberOfSideJacksL = 0; // Number of successful jumping jacks by the user
     public int numberOfSideJacksR = 0; // Number of successful jumping jacks by the user
     public int numberOfPointsForSideJack = 300; // Number of points given for each successful jumping jack
-    private bool sideJackReset = false;
+    private bool sideJackReset = false; // Players needs to tilt head back and get hand down between side jacks
 
     // Jumping
     public bool isJumping = false; // Detect when player is jumping
@@ -97,21 +96,17 @@ public class ActivityMonitor : MonoBehaviour
         float currentHeight = VRHeadset.position.y;
         // Get how far player's head is from his standing upright position
         heightDelta = currentHeight - playersHeight;
-        //Debug.Log(heightDelta);
         // Calculate the height difference between the hands of the player
         handsHeightDifference = Mathf.Abs(leftController.position.y - rightController.position.y);
-        //Debug.Log(handsHeightDifference);
         // Get current orientation of the VR headset
         Vector3 headForward = VRHeadset.forward;
 
         // Get current rotation of the VR headset
         Quaternion currentRotation = VRHeadset.transform.rotation;
-        // Calculate how much the rotation has changed from a initial rotation position
-        //Debug.Log(Quaternion.identity);
+        // Calculate how much VR headset rotation has changed from a initial rotation position - Rotation to left and right
         float rotationDelta = Mathf.Abs(currentRotation.eulerAngles.z - Quaternion.identity.eulerAngles.z);
-        //Debug.Log(rotationDelta);
-        //float yRotation = VRHeadset.eulerAngles.y;
-        //Debug.Log(yRotation);
+        // Calculate the height difference between the hands of the player (Right above = negative number, Left above = positive number) 
+        float handHeightDelta = leftController.position.y - rightController.position.y;
 
         // Monitor if the tracking points are getting teleported
         if (Vector3.Distance(leftController.position, previousLeftPosition) > teleportThreshold)
@@ -161,8 +156,6 @@ public class ActivityMonitor : MonoBehaviour
             isJumping = false;
         }
 
-        //Debug.Log((leftController.position.y + rightController.position.y) / 2);
-
         // SQUAT
         // Check if the user has performed a beneficial movement
         // First check for a cooldown between each beneficial movement
@@ -185,35 +178,36 @@ public class ActivityMonitor : MonoBehaviour
             Debug.Log("Squat Detected!");
         }
 
-        //Debug.Log(rotationDelta);
         // SIDE JACK
-        // TODO add some sidejack reset
-        if(true)
+        // Checks if side jack is resetted, if head is tilting to left side, and if the right hand is up (oppisite hand compared to side)
+        if (sideJackReset && rotationDelta > 20 && rotationDelta < 90 && handHeightDelta < -handHeightThreshold)
         {
-            float handHeightDelta = leftController.position.y - rightController.position.y;
-            //Debug.Log(handHeightDelta);
-            // Checks if head is tilting to left side while the right hand is up (it is oppisite hand compared to side)
-            if (rotationDelta > 30 && rotationDelta < 90 && handHeightDelta < -handHeightThreshold)
-            {
-                // Side jack to left side detected
-                numberOfSideJacksL += 1;
-                Debug.Log("Side jack left side detected!");
-            }
-            else if (rotationDelta < 330 && rotationDelta > 300 && handHeightDelta > handHeightThreshold)
-            {
-                // check if the head is tilting og right side while the left hand is up (it is oppisite hand compared to side)
-                // Side jack to right side detected
-                numberOfSideJacksR += 1;
-                Debug.Log("Side jack right side detected!");
-            }
+            // Player will have to reset between each side jack
+            sideJackReset = false;
+            // Side jack to left side was detected
+            numberOfSideJacksL += 1;
+            Debug.Log("Side jack left side detected!");
         }
-        else if(!sideJackReset)
+        // Checks if side jack is resetted, if head is tilting to right side, and if the left hand is up (oppisite hand compared to side)
+        else if (sideJackReset && rotationDelta < 340 && rotationDelta > 300 && handHeightDelta > handHeightThreshold)
         {
+            // Player will have to reset between each side jack
+            sideJackReset = false;
+            // Side jack to right side detected
+            numberOfSideJacksR += 1;
+            Debug.Log("Side jack right side detected!");
+        }
+        // If sideJack has not been resetted already, if head is close to initial rotation and if the hands are close to eachother again
+        else if (!sideJackReset && (rotationDelta < 10 || rotationDelta > 350) && Mathf.Abs(handHeightDelta) < 0.2)
+        {
+            // Side jack gets a reset
             sideJackReset = true;
-        } 
+            Debug.Log("Side jack resetted");
+        }
 
         // JUMPING JACK
-        if (handsHeightDifference < maxHandsDifference) // First check if the players hands are within similar height while performing jumping jack
+        // First check if the players hands are within similar height while performing jumping jack
+        if (handsHeightDifference < maxHandsDifference)
         {
             // Calculates the average height of both controllers - To detect if they are below or above waist
             float avgControllerHeight = (leftController.position.y + rightController.position.y) / 2;
@@ -279,7 +273,7 @@ public class ActivityMonitor : MonoBehaviour
             //Debug.Log("VR headset moved " + headsetDistanceMoved + " centimeters this frame.");
         }
         // Combile all physical activity data into one value - From each tracking point and from all beneficial movements
-        totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved + numberOfSquats * numberOfPointsForSquats + (numberOfJumpingJacks + numberOfJumpingJacks2) * numberOfPointsForJumpingJack;
+        totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved + numberOfSquats * numberOfPointsForSquats + (numberOfJumpingJacks + numberOfJumpingJacks2) * numberOfPointsForJumpingJack + (numberOfSideJacksL + numberOfSideJacksR) * numberOfPointsForSideJack;
         //Debug.Log(totalMovementData);
     }
 }

@@ -1913,6 +1913,11 @@ MonoBehaviour:
   numberOfPointsForSquats: 1000
   squatThreshold: 0.3
   squatHeadRotationThreshold: 0.5
+  rotationThreshold: 0.3
+  handHeightThreshold: 0.6
+  numberOfSideJacksL: 0
+  numberOfSideJacksR: 0
+  numberOfPointsForSideJack: 300
   isJumping: 0
   heightToDetectJump: 0.05
   handsHeightDifference: 0
