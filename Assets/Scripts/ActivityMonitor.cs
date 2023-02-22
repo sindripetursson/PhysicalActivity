@@ -7,14 +7,14 @@ public class ActivityMonitor : MonoBehaviour
     private bool initialized = false;
 
     // Variables for general movements
-    public Transform leftController; // left VR controller
-    public Transform rightController; // right VR controller
+    public Transform leftController; // Left VR controller
+    public Transform rightController; // Right VR controller
     public Transform VRHeadset; // VR headset
 
     // Previous position of each tracking point
-    private Vector3 previousLeftPosition; // previous position of left VR controller
-    private Vector3 previousRightPosition; // previous position of right VR controller
-    private Vector3 previousHeadsetPosition; // previous position of VR headset
+    private Vector3 previousLeftPosition; // Previous position of left VR controller
+    private Vector3 previousRightPosition; // Previous position of right VR controller
+    private Vector3 previousHeadsetPosition; // Previous position of VR headset
 
     // Total distance of each tracking point
     public float leftDistanceMoved = 0f; // Total distance left controller has moved
@@ -23,50 +23,50 @@ public class ActivityMonitor : MonoBehaviour
 
     // Movement Thresholds
     private float movementThreshold = 0.1f; // The minimum distance each tracking point needs to be move to be triggered as movement
-    private float teleportThreshold = 1f; // The maximum distance each tracking point can move to be triggered as movement - To avoid gaining points when tracking points teleports after disconnection
-
-    // Measurements
-    public float heightDelta; // How far player's head is from his standing upright position
+    private float teleportThreshold = 1.0f; // The maximum distance each tracking point can move to be triggered as movement - To avoid gaining points when teleported on disconnect
 
     // Convertion
-    private float movementToDistance = 100f; // Convert tracking point data to real life distance: In real life: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
+    private float movementToDistance = 100f; // Convert tracking point data to real life distance: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
 
     // Points
     public float totalMovementData = 0f; // All physical activity data combined into one value - From each tracking point and from all beneficial movements
 
     // Beneficial movements
-    [SerializeField] public float playersHeight = 1.7f; // Height of the VR headset when user is standing up, used for movement detection - TODO: Add a method to calibrate this
-    private bool movementReset = false; // Check if user got up to standing up position between each beneficial movelemt
-    [SerializeField] private float movementCoolDown = 6.0f; // Cool down time needed between beneficial movement
-    private float timeSinceMovement = 0f; // Time elapsed since the last beneficial movment detection - should be set to 0
+    [SerializeField] public float playersHeight = 1.7f; // Height of headset when user is standing up, used for movement detection
+    [HideInInspector] public float heightDelta; // How far player's head is from his standing upright position
+    private bool movementReset = false; // Check if user got up to standing up position between beneficial movements - only used for squats
+    [SerializeField] private float movementCoolDown = 6.0f; // Cool down time needed between beneficial movement - only used for squats
+    private float timeSinceMovement = 0f; // Time elapsed since the last beneficial movment detection - should be set to 0 - only used for squats
 
     // Squat movment
-    public int numberOfSquats = 0; // Number of successful squats by the user
-    public int numberOfPointsForSquats = 1000; // Number of points given for each successful squat
+    public int numberOfSquats = 0; // Number of successful squats
+    public int numberOfPointsForSquats = 1000; // Number of points for each successful squat
     [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height - Larger number = deeper squat
+    [HideInInspector] public float lookingDown; // The amout the player is looking down
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
     // Side jack
     public float handHeightThreshold = 0.6f; // The amount the player has to raise the hand to detect side jack
-    public int numberOfSideJacksL = 0; // Number of successful jumping jacks by the user
-    public int numberOfSideJacksR = 0; // Number of successful jumping jacks by the user
-    public int numberOfPointsForSideJack = 300; // Number of points given for each successful jumping jack
-    private bool sideJackReset = false; // Players needs to tilt head back and get hand down between side jacks
+    public int numberOfSideJacksL = 0; // Number of successful left side jacks
+    public int numberOfSideJacksR = 0; // Number of successful right side jacks
+    public int numberOfPointsForSideJack = 250; // Points given for each successful side jack
+    private bool sideJackReset = false; // Player needs to tilt head back close to initial position and put hand down between each side jack
+    [HideInInspector] public float rotationDelta = 0; // Check if headset rotation is to left or right
 
     // Jumping
-    public bool isJumping = false; // Detect when player is jumping
-    private float jumpStartTime = 0f; // How long was the player jumping
-    private float timeSinceJump = 0f; // How long is it since the player finished a jump
+    [HideInInspector] public bool isJumping = false; // Detect when player is jumping
+    private float jumpStartTime = 0f; // How long was the player jumping - Not used as of now
+    public float timeSinceJump = 0f; // How long is it since the player finished a jump
 
     // Jumping jack
-    [SerializeField] private float heightToDetectJump = 0.1f; // Threshold to detect jump - Used with heightDelta = 0 is standing upright - 0.1 is little above that
-    private float maxHandsDifference = 0.2f; // Max allowed y-axis on player hands while performing jumping jacks
-    public float handsHeightDifference; // Check the difference on left and right hand height
+    [SerializeField] private float heightToDetectJump = 0.1f; // Threshold to detect a jump
+    private float maxHandsDifference = 0.2f; // Max allowed y-axis difference on player hands while performing jumping jacks
+    [HideInInspector] public float handsHeightDifference; // Check the difference on left and right hand height
     private bool jumpingJackInitial = false; // Player is standing upright with hands down 
     private bool jumpingJackSecondPhase = false; // player is standing upright with hands up
     public int numberOfJumpingJacks = 0; // Number of successful jumping jacks from initial position (hands below waist)
     public int numberOfJumpingJacks2 = 0; // Number of successful jumping jacks from second position (hand above head)
-    public int numberOfPointsForJumpingJack = 300; // Number of points given for each successful jumping jack
+    public int numberOfPointsForJumpingJack = 250; // Number of points given for each successful jumping jack
 
     IEnumerator Initialize()
     {
@@ -86,7 +86,7 @@ public class ActivityMonitor : MonoBehaviour
     void Update()
     {
         // Check if the initialization process has finished
-        // To prevent tracking points to gain points when they teleport from their initial positions
+        // To prevent tracking points to gain points when teleported from initial positions
         if (!initialized)
         {
             return;
@@ -98,14 +98,13 @@ public class ActivityMonitor : MonoBehaviour
         heightDelta = currentHeight - playersHeight;
         // Calculate the height difference between the hands of the player
         handsHeightDifference = Mathf.Abs(leftController.position.y - rightController.position.y);
-        // Get current orientation of the VR headset
-        Vector3 headForward = VRHeadset.forward;
-
-        // Get current rotation of the VR headset
+        // Looking down calculates how much down headset is facing (0 = facing forward / 1 = facing down) - VRHeadset.forward gets current orientation of headset
+        lookingDown = Vector3.Dot(VRHeadset.forward, Vector3.down);
+        // Get current rotation of the headset
         Quaternion currentRotation = VRHeadset.transform.rotation;
-        // Calculate how much VR headset rotation has changed from a initial rotation position - Rotation to left and right
-        float rotationDelta = Mathf.Abs(currentRotation.eulerAngles.z - Quaternion.identity.eulerAngles.z);
-        // Calculate the height difference between the hands of the player (Right above = negative number, Left above = positive number) 
+        // Calculate how much headset rotation has changed from a initial rotation position - Rotations to left and right
+        rotationDelta = Mathf.Abs(currentRotation.eulerAngles.z - Quaternion.identity.eulerAngles.z);
+        // Calculate the height difference between the hands of the player (Right hand above = negative number, Left hand above = positive number) 
         float handHeightDelta = leftController.position.y - rightController.position.y;
 
         // Monitor if the tracking points are getting teleported
@@ -138,8 +137,8 @@ public class ActivityMonitor : MonoBehaviour
             movementReset = true; // Player can now perform a new beneficial movement 
         }
 
-        // Check if the player is jumping
-        if(heightDelta > heightToDetectJump)
+        // Check if the player is jumping - heightDelta = 0 is standing upright - 0.1 is little above that
+        if (heightDelta > heightToDetectJump)
         {
             isJumping = true;
             // Timer on how long the jump was
@@ -164,14 +163,15 @@ public class ActivityMonitor : MonoBehaviour
         {
             timeSinceMovement += Time.deltaTime;
         }
-        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * squatThreshold && Vector3.Dot(headForward, Vector3.down) < squatHeadRotationThreshold)
+        else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * squatThreshold && lookingDown < squatHeadRotationThreshold)
         {
-            // Current Height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
+            // Current height is higher than 0 (Becomes 0 when headset disconnects / looses connection)
             // heightDelta checkes distance from players initial standing position (above 0) or (below 0)
             // If the user moves down by squat threshold (certain % of the players height) then it is detected as a squat
             // Checks how much the headset is facing down - The head can be slightliy facing down, but not over the squatHeadRotationThreshold
 
-            movementReset = false; // is false until player's head is close to standin up position
+            // Is false until player's head is close to standin up position
+            movementReset = false;
             // Reset the timer of the beneficial movement cool down
             timeSinceMovement = 0.0f;
             numberOfSquats += 1;
@@ -179,7 +179,7 @@ public class ActivityMonitor : MonoBehaviour
         }
 
         // SIDE JACK
-        // Checks if side jack is resetted, if head is tilting to left side, and if the right hand is up (oppisite hand compared to side)
+        // Checks if side jack is resetted, if head is tilting to left side, and if the right hand is up (oppisite hand to side)
         if (sideJackReset && rotationDelta > 20 && rotationDelta < 90 && handHeightDelta < -handHeightThreshold)
         {
             // Player will have to reset between each side jack
@@ -188,7 +188,7 @@ public class ActivityMonitor : MonoBehaviour
             numberOfSideJacksL += 1;
             Debug.Log("Side jack left side detected!");
         }
-        // Checks if side jack is resetted, if head is tilting to right side, and if the left hand is up (oppisite hand compared to side)
+        // Checks if side jack is resetted, if head is tilting to right side, and if the left hand is up (oppisite hand to side)
         else if (sideJackReset && rotationDelta < 340 && rotationDelta > 300 && handHeightDelta > handHeightThreshold)
         {
             // Player will have to reset between each side jack
@@ -197,7 +197,7 @@ public class ActivityMonitor : MonoBehaviour
             numberOfSideJacksR += 1;
             Debug.Log("Side jack right side detected!");
         }
-        // If sideJack has not been resetted already, if head is close to initial rotation and if the hands are close to eachother again
+        // If side jack has not been resetted already, if head is close to initial rotation and if the hands are close to eachother again
         else if (!sideJackReset && (rotationDelta < 10 || rotationDelta > 350) && Mathf.Abs(handHeightDelta) < 0.2)
         {
             // Side jack gets a reset

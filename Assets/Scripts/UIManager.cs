@@ -25,7 +25,7 @@ public class UIManager : MonoBehaviour
     public Image PhysicalActivityBar; // Access the bar
     private float currentFillAmount; // Track of current fill amount
     private float targetFillAmount; // Target fill amount
-    [SerializeField] private int pointsNeededForFullActivityBar = 10000; // Points needed to fill up the physical activity bar
+    private int pointsNeededForFullActivityBar = 30000; // Points needed to fill up the physical activity bar
     private float rememberPhysicalActivityPoints = 0; // Used when the physical activity bar is resetted
     private bool isGettingAReset = false; // Used while the physical activity bar is getting a reset
 
@@ -33,13 +33,15 @@ public class UIManager : MonoBehaviour
     public AudioSource audioSorce; // Sorce of the audio
     public AudioClip sound; // The sound played on a full activity bar
     public TextMeshProUGUI fullBarText; // Text displayed on activity bar when full
-    private string[] complementWords = { "Nice!", "Great!", "Awesome!", "Excellent!", "Amazing!", "Active!", "Strong!", "Well done!" }; // 8 complements
+    private string[] complementWords = { "Nice!", "Great!", "Awesome!", "Excellent!", "Amazing!", "Active!", "Strong!", "Well done!" }; // Complements when bar gets filled
 
 
     void Start()
     {
-        GameObject activityMonitorGameObject = GameObject.Find("ActivityMonitor"); // Find the Activity Monitor in the scene
-        activityMonitor = activityMonitorGameObject.GetComponent<ActivityMonitor>(); // Access the Activity Monitor
+        // Find the Activity Monitor in the scene
+        GameObject activityMonitorGameObject = GameObject.Find("ActivityMonitor");
+        // Access the Activity Monitor
+        activityMonitor = activityMonitorGameObject.GetComponent<ActivityMonitor>();
 
         // Initialize variables for the physical activity bar to 0
         currentFillAmount = 0f;
@@ -53,19 +55,19 @@ public class UIManager : MonoBehaviour
     {
         // Get values each tracking point from the ActivityMonitor and display them in the UI
         physicalActivityText.text = "Physical activity points: " + (int)activityMonitor.totalMovementData;
-        headsetActivityText.text = "Headset - Points " + (int)activityMonitor.headsetDistanceMoved + " - Position: " + activityMonitor.VRHeadset.position;
-        rightActivityText.text = "Right hand - Points: " + (int)activityMonitor.rightDistanceMoved + " - Position: " + activityMonitor.rightController.position;
-        leftActivityText.text = "Left hand - Points: " + (int)activityMonitor.leftDistanceMoved + " - Position: " + activityMonitor.leftController.position;
+        headsetActivityText.text = "Headset: Points " + (int)activityMonitor.headsetDistanceMoved + " - Position: " + activityMonitor.VRHeadset.position;
+        rightActivityText.text = "Right hand: Points: " + (int)activityMonitor.rightDistanceMoved + " - Position: " + activityMonitor.rightController.position;
+        leftActivityText.text = "Left hand: Points: " + (int)activityMonitor.leftDistanceMoved + " - Position: " + activityMonitor.leftController.position;
         // Display the number of squats and the number of squats multiplied with the points given for each
-        squatsActivityText.text = "Squats: " + activityMonitor.numberOfSquats + " - Reward: " + activityMonitor.numberOfSquats*activityMonitor.numberOfPointsForSquats;
+        squatsActivityText.text = "Squats: " + activityMonitor.numberOfSquats + " - Points: " + activityMonitor.numberOfSquats*activityMonitor.numberOfPointsForSquats;
         // Display the number of jumping jacks
-        jumpingJacksActivityText.text = "Jumping jacks: " + activityMonitor.numberOfJumpingJacks + " - Jumping jacks2: " + activityMonitor.numberOfJumpingJacks2 + " - Reward: " + ((activityMonitor.numberOfJumpingJacks + activityMonitor.numberOfJumpingJacks2) * activityMonitor.numberOfPointsForJumpingJack);
+        jumpingJacksActivityText.text = "Jumping jacks: " + activityMonitor.numberOfJumpingJacks + " - Jumping jacks2: " + activityMonitor.numberOfJumpingJacks2 + " - Points: " + ((activityMonitor.numberOfJumpingJacks + activityMonitor.numberOfJumpingJacks2) * activityMonitor.numberOfPointsForJumpingJack);
         // Display the number of side jacks
-        sideJacksActivityText.text = "Side jacks L: " + activityMonitor.numberOfSideJacksL + " - Side jacks R: " + activityMonitor.numberOfSideJacksR + " - Reward: " + ((activityMonitor.numberOfSideJacksL + activityMonitor.numberOfSideJacksR) * activityMonitor.numberOfPointsForSideJack);
+        sideJacksActivityText.text = "Side jacks L: " + activityMonitor.numberOfSideJacksL + " - Side jacks R: " + activityMonitor.numberOfSideJacksR + " - Points: " + ((activityMonitor.numberOfSideJacksL + activityMonitor.numberOfSideJacksR) * activityMonitor.numberOfPointsForSideJack);
         // Extra stuff used for debugging
-        playersHeightText.text = "Height: " + activityMonitor.playersHeight.ToString("F3");
-        debugInfoJumpText.text = "heightdelta: " + activityMonitor.heightDelta.ToString("F3") + " - isJumping: " + activityMonitor.isJumping;
-        debugInfoHandsText.text = "handsHeightDifference: " + activityMonitor.handsHeightDifference;
+        playersHeightText.text = "Height: " + activityMonitor.playersHeight.ToString("F3") + " - heightdelta: " + activityMonitor.heightDelta.ToString("F3") + " - isJumping: " + activityMonitor.isJumping + " - timeSinceJump: " + (Time.time - activityMonitor.timeSinceJump).ToString("F2");
+        debugInfoJumpText.text = "rotationDelta: " + activityMonitor.rotationDelta.ToString("F3") + " - lookingDown: " + activityMonitor.lookingDown.ToString("F3");
+        debugInfoHandsText.text = "handsHeightDifference: " + activityMonitor.handsHeightDifference.ToString("F3");
 
         // Update the physical activity bar
         UpdatePhysicalActivityBar();
