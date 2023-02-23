@@ -4,41 +4,47 @@ using System.Collections;
 public class ActivityMonitor : MonoBehaviour
 {
     // Setup
+    [Header("Setup")]
     private bool initialized = false;
 
     // Variables for general movements
+    [Header("General movements")]
     public Transform leftController; // Left VR controller
     public Transform rightController; // Right VR controller
     public Transform VRHeadset; // VR headset
 
     // Previous position of each tracking point
+    [Header("Previous positions")]
     private Vector3 previousLeftPosition; // Previous position of left VR controller
     private Vector3 previousRightPosition; // Previous position of right VR controller
     private Vector3 previousHeadsetPosition; // Previous position of VR headset
 
     // Total distance of each tracking point
+    [Header("Total distance")]
     public float leftDistanceMoved = 0f; // Total distance left controller has moved
     public float rightDistanceMoved = 0f; // Total distance right controller has moved
     public float headsetDistanceMoved = 0f; // Total distance VR headset has moved
 
     // Movement Thresholds
+    [Header("Movement Thresholds")]
     private float movementThreshold = 0.1f; // The minimum distance each tracking point needs to be move to be triggered as movement
     private float teleportThreshold = 1.0f; // The maximum distance each tracking point can move to be triggered as movement - To avoid gaining points when teleported on disconnect
 
     // Convertion
+    [Header("Convertion")]
     private float movementToDistance = 100f; // Convert tracking point data to real life distance: 100f = 1cm, 0.05f = 5cm, 0.1f = 10cm
 
-    // Points
-    public float totalMovementData = 0f; // All physical activity data combined into one value - From each tracking point and from all beneficial movements
-
     // Beneficial movements
+    [Header("Beneficial movements")]
+    public float totalMovementData = 0f; // All physical activity data combined into one value - From each tracking point and from all beneficial movements
     [SerializeField] public float playersHeight = 1.7f; // Height of headset when user is standing up, used for movement detection
     [HideInInspector] public float heightDelta; // How far player's head is from his standing upright position
-    private bool movementReset = false; // Check if user got up to standing up position between beneficial movements - only used for squats
-    [SerializeField] private float movementCoolDown = 6.0f; // Cool down time needed between beneficial movement - only used for squats
-    private float timeSinceMovement = 0f; // Time elapsed since the last beneficial movment detection - should be set to 0 - only used for squats
+    private bool squatReset = false; // Check if user got up to standing up position between beneficial movements
+    [SerializeField] private float squatCoolDown = 5.0f; // Cool down time needed between beneficial movement
+    private float timeSinceSquat = 0f; // Time elapsed since the last beneficial movment detection
 
-    // Squat movment
+    // Squatting
+    [Header("Squatting")]
     public int numberOfSquats = 0; // Number of successful squats
     public int numberOfPointsForSquats = 1000; // Number of points for each successful squat
     [SerializeField] private float squatThreshold = 0.3f; // Percent of players height needed to travel down with the headset - 0.3 = 30% of players height - Larger number = deeper squat
@@ -46,6 +52,7 @@ public class ActivityMonitor : MonoBehaviour
     [SerializeField] private float squatHeadRotationThreshold = 0.5f; // The amount player can look down while performing a squat - 0 = looking straight forward , 1 = looking straight down
 
     // Side jack
+    [Header("Side jack")]
     public float handHeightThreshold = 0.6f; // The amount the player has to raise the hand to detect side jack
     public int numberOfSideJacksL = 0; // Number of successful left side jacks
     public int numberOfSideJacksR = 0; // Number of successful right side jacks
@@ -54,11 +61,12 @@ public class ActivityMonitor : MonoBehaviour
     [HideInInspector] public float rotationDelta = 0; // Check if headset rotation is to left or right
 
     // Jumping
+    [Header("Jumping")]
     [HideInInspector] public bool isJumping = false; // Detect when player is jumping
-    private float jumpStartTime = 0f; // How long was the player jumping - Not used as of now
     public float timeSinceJump = 0f; // How long is it since the player finished a jump
 
     // Jumping jack
+    [Header("Jumping jack")]
     [SerializeField] private float heightToDetectJump = 0.1f; // Threshold to detect a jump
     private float maxHandsDifference = 0.2f; // Max allowed y-axis difference on player hands while performing jumping jacks
     [HideInInspector] public float handsHeightDifference; // Check the difference on left and right hand height
@@ -67,6 +75,17 @@ public class ActivityMonitor : MonoBehaviour
     public int numberOfJumpingJacks = 0; // Number of successful jumping jacks from initial position (hands below waist)
     public int numberOfJumpingJacks2 = 0; // Number of successful jumping jacks from second position (hand above head)
     public int numberOfPointsForJumpingJack = 250; // Number of points given for each successful jumping jack
+    public float timeSinceJumpingJack = 0f; // Check how long time since last jumping jack
+
+   // Beneficial Movement Icons
+   [Header("Icons")]
+    public Material whiteIcon; // White color is default
+    public Material greenIcon; // Green color when movement is triggered
+    public SpriteRenderer squatIcon; // Squat icon location
+    public SpriteRenderer jumpingJackIcon; // Jumping jack icon location
+    public SpriteRenderer sideJackIcon; // Side jack icon location
+    public Sprite RightSide; // Reference to right side sprite
+    public Sprite LeftSide; // Reference to left side sprite
 
     IEnumerator Initialize()
     {
@@ -78,11 +97,13 @@ public class ActivityMonitor : MonoBehaviour
         previousHeadsetPosition = VRHeadset.position;
         initialized = true;
     }
+
     void Start()
     {
         // Start the initialization process
         StartCoroutine(Initialize());
     }
+
     void Update()
     {
         // Check if the initialization process has finished
@@ -129,20 +150,21 @@ public class ActivityMonitor : MonoBehaviour
         }
 
         // Checks if player's head is close to upstanding position
-        // Makes sure that player has to go to initial standing position between each beneficial movement
+        // Makes sure that player has to go to initial standing position between each squat movement
         // Only goes into this if movementReset is false
-        if (heightDelta > -0.1 && heightDelta < 0.1 && !movementReset)
+        if (heightDelta > -0.1 && heightDelta < 0.1 && !squatReset)
         {
-            Debug.Log("Movement Reset!");
-            movementReset = true; // Player can now perform a new beneficial movement 
+            Debug.Log("Squat Reset!");
+            // Set squat icon back to white
+            squatIcon.material = whiteIcon;
+            squatReset = true; // Player can now perform a new squat movement 
         }
 
         // Check if the player is jumping - heightDelta = 0 is standing upright - 0.1 is little above that
         if (heightDelta > heightToDetectJump)
         {
+            // Player is in the air
             isJumping = true;
-            // Timer on how long the jump was
-            jumpStartTime = Time.time;
         }
         else
         {
@@ -159,9 +181,9 @@ public class ActivityMonitor : MonoBehaviour
         // Check if the user has performed a beneficial movement
         // First check for a cooldown between each beneficial movement
         // Skip this check if player has got into their initial standing position (Then they dont have to wait for the cooldown timer)
-        if (!movementReset && timeSinceMovement < movementCoolDown)
+        if (!squatReset && timeSinceSquat < squatCoolDown)
         {
-            timeSinceMovement += Time.deltaTime;
+            timeSinceSquat += Time.deltaTime;
         }
         else if (currentHeight > 0 && heightDelta < 0 && Mathf.Abs(heightDelta) > playersHeight * squatThreshold && lookingDown < squatHeadRotationThreshold)
         {
@@ -170,10 +192,12 @@ public class ActivityMonitor : MonoBehaviour
             // If the user moves down by squat threshold (certain % of the players height) then it is detected as a squat
             // Checks how much the headset is facing down - The head can be slightliy facing down, but not over the squatHeadRotationThreshold
 
+            // Set squat icon to green
+            squatIcon.material = greenIcon;
             // Is false until player's head is close to standin up position
-            movementReset = false;
+            squatReset = false;
             // Reset the timer of the beneficial movement cool down
-            timeSinceMovement = 0.0f;
+            timeSinceSquat = 0.0f;
             numberOfSquats += 1;
             Debug.Log("Squat Detected!");
         }
@@ -182,6 +206,9 @@ public class ActivityMonitor : MonoBehaviour
         // Checks if side jack is resetted, if head is tilting to left side, and if the right hand is up (oppisite hand to side)
         if (sideJackReset && rotationDelta > 20 && rotationDelta < 90 && handHeightDelta < -handHeightThreshold)
         {
+            // When left side is triggered, change icon to left side and color green
+            sideJackIcon.sprite = LeftSide; 
+            sideJackIcon.material = greenIcon;
             // Player will have to reset between each side jack
             sideJackReset = false;
             // Side jack to left side was detected
@@ -191,6 +218,9 @@ public class ActivityMonitor : MonoBehaviour
         // Checks if side jack is resetted, if head is tilting to right side, and if the left hand is up (oppisite hand to side)
         else if (sideJackReset && rotationDelta < 340 && rotationDelta > 300 && handHeightDelta > handHeightThreshold)
         {
+            // When right side is triggered, change icon to right side and color green
+            sideJackIcon.sprite = RightSide;
+            sideJackIcon.material = greenIcon;
             // Player will have to reset between each side jack
             sideJackReset = false;
             // Side jack to right side detected
@@ -200,6 +230,8 @@ public class ActivityMonitor : MonoBehaviour
         // If side jack has not been resetted already, if head is close to initial rotation and if the hands are close to eachother again
         else if (!sideJackReset && (rotationDelta < 10 || rotationDelta > 350) && Mathf.Abs(handHeightDelta) < 0.2)
         {
+            // Side jack icon becomes white
+            sideJackIcon.material = whiteIcon;
             // Side jack gets a reset
             sideJackReset = true;
             Debug.Log("Side jack resetted");
@@ -219,6 +251,10 @@ public class ActivityMonitor : MonoBehaviour
                 // Check if player is coming from the second JJ phase (hands above head) - And make sure it is less than 1 second since last jump
                 if(jumpingJackSecondPhase && (Time.time - timeSinceJump) < 0.5)
                 {
+                    // Jumping jack icon becomes green
+                    jumpingJackIcon.material = greenIcon;
+                    // Reset timer since last jumping jack
+                    timeSinceJumpingJack = Time.time;
                     // Second phase of JJ is over
                     jumpingJackSecondPhase = false;
                     // Give one point for JJ second phase
@@ -227,19 +263,29 @@ public class ActivityMonitor : MonoBehaviour
                 }
             }
             // If the player is jumping and controllers are above 1.5 (above head)
-            if (isJumping && avgControllerHeight > 1.5)
-            { 
+           if (isJumping && avgControllerHeight > 1.5)
+           {
                 // Then the player is getting into the second phase of JJ - Player is no longer in the initial position
                 jumpingJackSecondPhase = true;
                 // Check if player is coming from JJ initial position
                 if (jumpingJackInitial) {
+                    // Jumping jack icon becomes green
+                    jumpingJackIcon.material = greenIcon;
+                    // Reset timer since last jumping jack
+                    timeSinceJumpingJack = Time.time;
                     // It is no longer in JJ inital position
                     jumpingJackInitial = false;
                     // Give one point for JJ second phase
                     Debug.Log("Jumping jack detected!");
                     numberOfJumpingJacks += 1;
                 }
-            }
+           }
+        }
+        // Check if it has been more than 1 second since last jumping jack
+        if ((Time.time - timeSinceJumpingJack) > 1.0f)
+        {
+            // Set the jumping jack icon back to white
+            jumpingJackIcon.material = whiteIcon;
         }
 
         // Left controller
@@ -274,6 +320,5 @@ public class ActivityMonitor : MonoBehaviour
         }
         // Combile all physical activity data into one value - From each tracking point and from all beneficial movements
         totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved + numberOfSquats * numberOfPointsForSquats + (numberOfJumpingJacks + numberOfJumpingJacks2) * numberOfPointsForJumpingJack + (numberOfSideJacksL + numberOfSideJacksR) * numberOfPointsForSideJack;
-        //Debug.Log(totalMovementData);
     }
 }

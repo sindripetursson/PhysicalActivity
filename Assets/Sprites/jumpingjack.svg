@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2480" height="2480" viewBox="0 0 2480 2480">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        stroke: #000;
+      }
+
+      .cls-1, .cls-2 {
+        stroke-linecap: round;
+        fill-rule: evenodd;
+      }
+
+      .cls-1 {
+        stroke-width: 150px;
+      }
+
+      .cls-2 {
+        stroke-width: 120px;
+      }
+
+      .cls-3 {
+        stroke-linejoin: round;
+        stroke-width: 1px;
+      }
+    </style>
+  </defs>
+  <path id="Shape_1_copy_2" data-name="Shape 1 copy 2" class="cls-1" d="M1242.02,761.173l-4.04,657.337"/>
+  <path id="Shape_1_copy_7" data-name="Shape 1 copy 7" class="cls-2" d="M1182.66,1436.98L746.793,2135.15"/>
+  <path id="Shape_1_copy_8" data-name="Shape 1 copy 8" class="cls-2" d="M1299.92,1444.53l435.87,698.17"/>
+  <path id="Shape_1_copy_5" data-name="Shape 1 copy 5" class="cls-2" d="M1030.73,728.6l119.11,157.254"/>
+  <path id="Shape_1_copy_6" data-name="Shape 1 copy 6" class="cls-2" d="M950.145,340.418l64.185,366.93"/>
+  <path id="Shape_1_copy_9" data-name="Shape 1 copy 9" class="cls-2" d="M1448.27,729.817L1329.16,887.071"/>
+  <path id="Shape_1_copy_10" data-name="Shape 1 copy 10" class="cls-2" d="M1528.85,341.636l-64.18,366.93"/>
+  <circle class="cls-3" cx="1242" cy="539.062" r="175"/>
+</svg>

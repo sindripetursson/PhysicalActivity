@@ -7,9 +7,11 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     // Access the Activity Monitor
+    [Header("Activity Monitor")]
     private ActivityMonitor activityMonitor;
 
-    // All UI elements
+    // All UI text elements
+    [Header("UI text elements")]
     public TextMeshProUGUI physicalActivityText;
     public TextMeshProUGUI headsetActivityText;
     public TextMeshProUGUI rightActivityText;
@@ -22,6 +24,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI debugInfoHandsText;
 
     // Physical activity bar
+    [Header("Physical activity bar")]
     public Image PhysicalActivityBar; // Access the bar
     private float currentFillAmount; // Track of current fill amount
     private float targetFillAmount; // Target fill amount
@@ -30,11 +33,11 @@ public class UIManager : MonoBehaviour
     private bool isGettingAReset = false; // Used while the physical activity bar is getting a reset
 
     // Rewards
+    [Header("Rewards")]
     public AudioSource audioSorce; // Sorce of the audio
     public AudioClip sound; // The sound played on a full activity bar
     public TextMeshProUGUI fullBarText; // Text displayed on activity bar when full
     private string[] complementWords = { "Nice!", "Great!", "Awesome!", "Excellent!", "Amazing!", "Active!", "Strong!", "Well done!" }; // Complements when bar gets filled
-
 
     void Start()
     {
