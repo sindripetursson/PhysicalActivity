@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -136,5 +135,4 @@ public class UIManager : MonoBehaviour
         isGettingAReset = false;
         Debug.Log("Physical activity bar resetted");
     }
-
 }

@@ -76,6 +76,7 @@ public class ActivityMonitor : MonoBehaviour
     public int numberOfJumpingJacks2 = 0; // Number of successful jumping jacks from second position (hand above head)
     public int numberOfPointsForJumpingJack = 250; // Number of points given for each successful jumping jack
     public float timeSinceJumpingJack = 0f; // Check how long time since last jumping jack
+    public bool isInJJ = false;
 
    // Beneficial Movement Icons
    [Header("Icons")]
@@ -252,9 +253,12 @@ public class ActivityMonitor : MonoBehaviour
                 if(jumpingJackSecondPhase && (Time.time - timeSinceJump) < 0.5)
                 {
                     // Jumping jack icon becomes green
-                    jumpingJackIcon.material = greenIcon;
+                    if (!isInJJ)
+                    {
+                        StartCoroutine(JJIcon());
+                    }
                     // Reset timer since last jumping jack
-                    timeSinceJumpingJack = Time.time;
+                    timeSinceJumpingJack = Time.time - timeSinceJumpingJack;
                     // Second phase of JJ is over
                     jumpingJackSecondPhase = false;
                     // Give one point for JJ second phase
@@ -270,9 +274,12 @@ public class ActivityMonitor : MonoBehaviour
                 // Check if player is coming from JJ initial position
                 if (jumpingJackInitial) {
                     // Jumping jack icon becomes green
-                    jumpingJackIcon.material = greenIcon;
+                    if (!isInJJ)
+                    {
+                        StartCoroutine(JJIcon());
+                    }
                     // Reset timer since last jumping jack
-                    timeSinceJumpingJack = Time.time;
+                    timeSinceJumpingJack = Time.time - timeSinceJumpingJack;
                     // It is no longer in JJ inital position
                     jumpingJackInitial = false;
                     // Give one point for JJ second phase
@@ -280,12 +287,6 @@ public class ActivityMonitor : MonoBehaviour
                     numberOfJumpingJacks += 1;
                 }
            }
-        }
-        // Check if it has been more than 1 second since last jumping jack
-        if ((Time.time - timeSinceJumpingJack) > 1.0f)
-        {
-            // Set the jumping jack icon back to white
-            jumpingJackIcon.material = whiteIcon;
         }
 
         // Left controller
@@ -320,5 +321,15 @@ public class ActivityMonitor : MonoBehaviour
         }
         // Combile all physical activity data into one value - From each tracking point and from all beneficial movements
         totalMovementData = headsetDistanceMoved + rightDistanceMoved + leftDistanceMoved + numberOfSquats * numberOfPointsForSquats + (numberOfJumpingJacks + numberOfJumpingJacks2) * numberOfPointsForJumpingJack + (numberOfSideJacksL + numberOfSideJacksR) * numberOfPointsForSideJack;
+    }
+
+    IEnumerator JJIcon()
+    {
+        isInJJ = true;
+        jumpingJackIcon.material = greenIcon;
+        // Wait for 1 second
+        yield return new WaitForSeconds(1f);
+        isInJJ = false;
+        jumpingJackIcon.material = whiteIcon;
     }
 }
